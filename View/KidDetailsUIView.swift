@@ -13,7 +13,7 @@ class KidDetailsUIView: UIView {
         var view = UILabel()
         view.frame = CGRect(x: 0, y: 0, width: 112, height: 8)
         view.textColor = UIColor(red: 1, green: 1, blue: 1, alpha: 1)
-        view.font = UIFont(name: "Poppins-Regular", size: 12)
+        view.font = UIFont(name: "Poppins-Regular", size: 16)
         view.text = "Available to spend"
         view.textAlignment = .center
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -38,14 +38,14 @@ class KidDetailsUIView: UIView {
         leftLabelsStackView.addArrangedSubview(availableBalanceLbl)
         leftLabelsStackView.axis = .vertical
         leftLabelsStackView.distribution = .fillProportionally
-        leftLabelsStackView.spacing = 10
+        leftLabelsStackView.spacing = 12
         leftLabelsStackView.translatesAutoresizingMaskIntoConstraints = false
         leftLabelsStackView.isLayoutMarginsRelativeArrangement = true
-
+        
     }
     private let nameLbl: UILabel = {
         var view = UILabel()
-        view.frame = CGRect(x: 0, y: 0, width: 87, height: 17)
+        view.frame = CGRect(x: 0, y: 0, width: 95, height: 17)
         view.textColor = UIColor(red: 1, green: 1, blue: 1, alpha: 1)
         view.font = UIFont(name: "Poppins-Regular", size: 24)
         view.text = "KHALED"
@@ -55,9 +55,9 @@ class KidDetailsUIView: UIView {
     }()
     private let phoneLbl: UILabel = {
         var view = UILabel()
-        view.frame = CGRect(x: 0, y: 0, width: 78, height: 8)
+        view.frame = CGRect(x: 0, y: 0, width: 80, height: 20)
         view.textColor = UIColor(red: 1, green: 1, blue: 1, alpha: 1)
-        view.font = UIFont(name: "Poppins-Regular", size: 12)
+        view.font = UIFont(name: "Poppins-Regular", size: 16)
         view.text = "01234567898"
         view.textAlignment = .center
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -75,13 +75,13 @@ class KidDetailsUIView: UIView {
         rightLabelsStackView.spacing = 10
         rightLabelsStackView.translatesAutoresizingMaskIntoConstraints = false
         rightLabelsStackView.isLayoutMarginsRelativeArrangement = true
-
+        
     }
-   
-
+    
+    
     
     private let detailsStackView = UIStackView()
-
+    
     func configuredetailsStackView(){
         configureLeftLabelsStack()
         configureRightLabelsStackView()
@@ -89,15 +89,15 @@ class KidDetailsUIView: UIView {
         detailsStackView.addArrangedSubview(leftLabelsStackView)
         detailsStackView.axis = .horizontal
         detailsStackView.distribution = .fillProportionally
-        detailsStackView.spacing = 120
+        detailsStackView.spacing = 50
         detailsStackView.translatesAutoresizingMaskIntoConstraints = false
         detailsStackView.backgroundColor = #colorLiteral(red: 0.4, green: 0, blue: 0.6, alpha: 0.7917770487)
         detailsStackView.layer.cornerRadius = 12
         detailsStackView.isLayoutMarginsRelativeArrangement = true
         detailsStackView.layoutMargins = UIEdgeInsets(top: 24, left: 18, bottom: 24, right: 18)
-
+        
     }
-   
+    
     public func configure(balance: String, name: String, phone: String) {
         balanceDisplayLbl.text = balance
         nameLbl.text = name
@@ -120,17 +120,16 @@ class KidDetailsUIView: UIView {
         fatalError()
     }
     private func applyConstraints(){
-      
+        
         let detailsStackViewConstraints = [
             detailsStackView.topAnchor.constraint(equalTo: self.topAnchor, constant: 28),
-            detailsStackView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -28),
-            detailsStackView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            detailsStackView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 16),
             detailsStackView.widthAnchor.constraint(equalToConstant: 400),
-            detailsStackView.heightAnchor.constraint(equalToConstant: 85)
-
+            detailsStackView.heightAnchor.constraint(equalToConstant: 95)
+            
         ]
         NSLayoutConstraint.activate(detailsStackViewConstraints)
-}
-
-
+    }
+    
+    
 }
