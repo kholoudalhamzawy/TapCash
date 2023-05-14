@@ -13,7 +13,6 @@ class logInViewController: UIViewController {
     
     private var viewModel = AuthenticationViewViewModel()
     private var subscriptions: Set<AnyCancellable> = []
-        
     
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -303,10 +302,9 @@ class logInViewController: UIViewController {
         notificationCenter.addObserver(self, selector: #selector(keyboardDisapear), name: UIResponder.keyboardWillHideNotification, object: nil)
         notificationCenter.addObserver(self, selector: #selector(keyboardApear), name: UIResponder.keyboardWillShowNotification, object: nil)
         
-        
-        mailTextFeild.text = "Rr@rr.rr"
-        passwordTextFeild.text = "Rr11111111"
-    
+        mailTextFeild.text = "kww@gmail.com"
+        passwordTextFeild.text = "kS@123456"
+      
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -344,10 +342,7 @@ class logInViewController: UIViewController {
     private func bindViews(){
        
         viewModel.$isAuthenticationFormValid.sink{ [weak self] validationState in
-            
-            guard let vc = self?.navigationController?.viewControllers.first as? logInViewController else {return}
-            vc.dismiss(animated: true)
-            //  self?.viewModel.logInUser()
+              self?.viewModel.logInUser()
             
         }
         .store(in: &subscriptions)
