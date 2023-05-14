@@ -6,9 +6,14 @@
 //
 
 import UIKit
+import Combine
 
 class HomeViewController: UIViewController {
-
+    
+    private var viewModel = HomeViewViewModel()
+    private var authViewModel = AuthenticationViewViewModel()
+    private var subscriptions: Set<AnyCancellable> = []
+    
     
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -106,6 +111,19 @@ class HomeViewController: UIViewController {
                                            "Smart Cards",
                                            "Online Bills"]
     
+    @objc func DidTapCashin(){
+        navigationController?.pushViewController(CashinViewController(), animated: true)
+    }
+    @objc func DidTapCashout(){
+        navigationController?.pushViewController(CashoutViewController(), animated: true)
+    }
+    @objc func DidTapScanner(){
+//            navigationController?.pushViewController(ScannerViewController(), animated: true)
+    }
+    @objc func DidTapDonations(){
+        navigationController?.pushViewController(DonationsViewController(), animated: true)
+    }
+    
     func configureTransactionVStack() {
         
         for index in 0..<transactionVStackAssets.count {
@@ -146,7 +164,22 @@ class HomeViewController: UIViewController {
             subStack.layoutMargins = UIEdgeInsets(top: 10, left: 0, bottom: 10, right: 0)
             subStack.addArrangedSubview(view)
             subStack.addArrangedSubview(label)
-
+            
+            let tap: UITapGestureRecognizer
+            switch index {
+            case 0:
+                 tap = UITapGestureRecognizer(target: self, action: #selector(DidTapDonations))
+            case 1:
+                 tap = UITapGestureRecognizer(target: self, action: #selector(DidTapCashin))
+            case 2:
+                 tap = UITapGestureRecognizer(target: self, action: #selector(DidTapCashout))
+            case 3:
+                 tap = UITapGestureRecognizer(target: self, action: #selector(DidTapScanner))
+            default:
+                tap = UITapGestureRecognizer(target: self, action: #selector(DidTapCashout))
+            }
+            
+            subStack.addGestureRecognizer(tap)
             transactionVStack.addArrangedSubview(subStack)
             
         }
@@ -280,41 +313,6 @@ class HomeViewController: UIViewController {
         return tableView
     }()
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .white
-        navigationItem.hidesBackButton = true
-        configureNavigationBar()
-
-        view.addSubview(scrollView)
-        configurewalletStack()
-
-        scrollView.addSubview(vscrollView)
-        configureTransactionVStack()
-
-        scrollView.addSubview(paymentScrollView)
-        configurepPymentsVStack()
-
-        scrollView.addSubview(paymentLbl)
-        scrollView.addSubview(seeAllLbl)
-        scrollView.addSubview(AdImageView)
-        scrollView.addSubview(Ad2ImageView)
-//
-//        
-//        let vc = UINavigationController(rootViewController: logInViewController())
-//        vc.modalPresentationStyle = .fullScreen
-//        present(vc, animated: false)
-        
-    }
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-
-    }
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        lastTransactionsTableView.frame = view.frame
-        applyConstarints()
-    }
    
     private func applyConstarints(){
         
@@ -402,12 +400,86 @@ class HomeViewController: UIViewController {
     }
     
     @objc private func didTapLogOut(){
-        let vc = logInViewController()
-//        vc.modalPresentationStyle = .fullScreen
-//        present(vc, animated: false)
+        authViewModel.logoutUser()
 
-        navigationController?.pushViewController(vc, animated: true)
     }
     
+    private func handleAuthentication(){
+        if let data = KeychainHelper
+            .standard.read( service: Constants.service, account: Constants.account){
+            let token = String(data: data, encoding: .utf8)!
+            AuthenticationViewViewModel.auth.token = token
+        }
+        AuthenticationViewViewModel.auth.$token.sink{ [weak self] token in
+            if token == nil {
+                let vc = UINavigationController(rootViewController: logInViewController())
+                vc.modalPresentationStyle = .fullScreen
+                self?.present(vc, animated: false)
+                DispatchQueue.main.async {
+//                    self?.timelineTableView.reloadData()
+                }
+            } else {
+                self?.viewModel.getBalance()
+            }
+        }.store(in: &subscriptions)
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .white
+        navigationItem.hidesBackButton = true
+        configureNavigationBar()
+
+        view.addSubview(scrollView)
+        configurewalletStack()
+
+        scrollView.addSubview(vscrollView)
+        configureTransactionVStack()
+
+        scrollView.addSubview(paymentScrollView)
+        configurepPymentsVStack()
+
+        scrollView.addSubview(paymentLbl)
+        scrollView.addSubview(seeAllLbl)
+        scrollView.addSubview(AdImageView)
+        scrollView.addSubview(Ad2ImageView)
+   
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        handleAuthentication()
+        bindViews()
+
+    }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        lastTransactionsTableView.frame = view.frame
+        applyConstarints()
+    }
+    
+    private func bindViews(){
+        AuthenticationViewViewModel.auth.$balance.sink{ [weak self] balance in
+            guard balance != nil else {return}
+            self?.balanceDisplayLbl.text = balance
+        }
+        .store(in: &subscriptions)
+        
+        viewModel.$error.sink{ [weak self] errorString in
+            guard let error = errorString else { return }
+            self?.presentAlert(with: error)
+                                
+        }
+        .store(in: &subscriptions)
+
+    }
+    
+    private func presentAlert(with error: String) {
+        let alert = UIAlertController(title: "Error", message: error, preferredStyle: .alert)
+        let okayButton = UIAlertAction(title: "ok", style: .default)
+        alert.addAction(okayButton)
+        present(alert, animated: true)
+    }
+
+
 }
 
