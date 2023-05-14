@@ -17,3 +17,10 @@ struct Constants {
     static let service = "Token"
     static let account = "TabCash"
 }
+
+
+enum ServiceError: Error {
+    case serverError(String)
+    case unkown(String = "An unknown error occured.")
+    case decodingError(String = "Error parsing server response.")
+}
