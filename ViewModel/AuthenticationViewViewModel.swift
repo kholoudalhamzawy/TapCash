@@ -7,10 +7,12 @@
 
 import Foundation
 import Combine
-
+import UIKit
 
 
 final class AuthenticationViewViewModel: ObservableObject {
+    
+    static let auth = AuthenticationViewViewModel()
 
     @Published var email: String?
     @Published var password: String?
@@ -18,6 +20,10 @@ final class AuthenticationViewViewModel: ObservableObject {
     @Published var confirmPassword: String?
     @Published var name: String?
     @Published var user: User?
+    @Published var token: String?
+    @Published var balance: String?
+    @Published var idImage: UIImage?
+    @Published var hasAccessToken: Bool = false
     @Published var isAuthenticationFormValid: Bool = false
     @Published var subscriptions: Set<AnyCancellable> = []
     @Published var error: String?
@@ -119,7 +125,6 @@ final class AuthenticationViewViewModel: ObservableObject {
         isAuthenticationFormValid = passwordError!.isEmpty &&
                                     emailError!.isEmpty
 
-
     }
 
     func validateAuthenticationsignUpForm(){
@@ -150,100 +155,91 @@ final class AuthenticationViewViewModel: ObservableObject {
               let name = name
         else {return}
         
-        let userRequest = SignupUserRequest(email: email, name: name, password: password, phone: phone)
-        
-        guard let request = Endpoint.createAccount(userRequest: userRequest).request else { return }
-        
-//        var request = URLRequest(url: URL(string:"https://tapcash.000webhostapp.com/api/tapcash/orange/v1/register")!)
+        var userRequest = SignupUserRequest(email: email, name: name, password: password, phone: phone)
                                  
-        AuthManager.shared.publisher(request: request, token: nil)
-            .decode(type: Response.self, decoder: JSONDecoder())
-            .handleEvents(receiveOutput: { response in
-                let data = Data(response.authorisation.token.utf8)
-                KeychainHelper.standard.save(data,service: Constants.service, account: Constants.account)
-                print("response")
-            })
-            .sink { [weak self] completion in
-                if case .failure(let error) = completion { //the completion that's returned either is failure or success, so instead of switch statement we just put " if case .failure " because we only want to check for that case
+        AuthManager.shared.fetch(path: "/register", parameters: userRequest.parameters) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    self?.user = response.user
+                    AuthenticationViewViewModel.auth.token = response.authorisation.token
+                    let token = Data( response.authorisation.token.utf8)
+                    KeychainHelper.standard.save(token, service: Constants.service, account: Constants.account)
+
+                case .failure(let error):
                     guard let error = error as? ServiceError else { return }
-                    
                     switch error {
                     case .serverError(let string),
                             .unkown(let string),
                             .decodingError(let string):
-                            self?.error = string
-                        self?.error = error.localizedDescription
+                        print(string)
+                        self?.error = string
                     }
                 }
-
-            } receiveValue: {  response in
-                UserDefaults.standard.set(response.user.name, forKey: "username")
             }
-            .store(in: &subscriptions)
-    }
-
-    
-
-    func logInUser() {
-        guard let email = email, let password = password else {
-            return
         }
-        
-        let userRequest = LoginUserRequest(email: email, password: password)
-        
-        guard let request = Endpoint.signIn(userRequest: userRequest).request else { return }
-                                 
-        AuthManager.shared.publisher(request: request, token: nil)
-            .decode(type: Response.self, decoder: JSONDecoder())
-            .handleEvents(receiveOutput: { response in
-                let data = Data(response.authorisation.token.utf8)
-                KeychainHelper.standard.save(data,service: Constants.service, account: Constants.account)
-                print("response")
-            })
-            .sink { [weak self] completion in
-                if case .failure(let error) = completion { //the completion that's returned either is failure or success, so instead of switch statement we just put " if case .failure " because we only want to check for that case
-                    guard let error = error as? ServiceError else { return }
-                    
-                    switch error {
-                    case .serverError(let string),
-                            .unkown(let string),
-                            .decodingError(let string):
-                            self?.error = string
-                        self?.error = error.localizedDescription
-                    }
+    }
+    
+    func logInUser() {
+           guard let email = email, let password = password else {
+               return
+           }
+              var userRequest = LoginUserRequest(email: email, password: password)
+   
+   
+        AuthManager.shared.fetch(path: "/login", parameters: userRequest.parameters) { [weak self] result in
+        DispatchQueue.main.async {
+            
+//                [weak self] in
+//                guard let self = self else { return }
+            switch result {
+            case .success(let response):
+                self?.user = response.user
+                AuthenticationViewViewModel.auth.token = response.authorisation.token
+                let token = Data( response.authorisation.token.utf8)
+                KeychainHelper.standard.save(token, service: Constants.service, account: Constants.account)
+                print(response)
+
+            case .failure(let error):
+                
+                guard let error = error as? ServiceError else { return }
+                
+                switch error {
+                case .serverError(let string),
+                        .unkown(let string),
+                        .decodingError(let string):
+                    self?.error = string
+                    print(string)
+//                        AlertManager.showSignInErrorAlert(on: self, with: string)
                 }
-
-            } receiveValue: {  response in
-                UserDefaults.standard.set(response.user, forKey: "user")
-                self.user = response.user
             }
-            .store(in: &subscriptions)
+        }
     }
+    
+}
+    func logoutUser() {
+        AuthManager.shared.logout() { [weak self] result in
+        DispatchQueue.main.async {
+            
+            switch result {
+            case .success(let response):
+                self?.user = nil
+                AuthenticationViewViewModel.auth.token = nil
+                KeychainHelper.standard.delete(service: Constants.service, account: Constants.account)
+                print(response)
 
-    func updateUserData(){
-//        guard let name = name,
-//              let phoneNumber = phoneNumber,
-//              let id = Auth.auth().currentUser?.uid else { return }
-//
-//        let updatedFields: [String: Any] = [
-//            "name": name,
-//            "phoneNumber": phoneNumber
-//        ]
-//
-//        DatabaseManager.shared.collectionUsers(updateFields: updatedFields, for: id)
-//        //when the function recieves the bool value it performs the closure
-//            .sink{ [weak self] Completion in
-//                if case .failure(let error) = Completion {
-//                    print(error.localizedDescription)
-//                    self?.error = error.localizedDescription
-//                }
-//            } receiveValue: { state in
-//                print("Adding user data to database: \(state)")
-//            }
-//            .store(in: &subscriptions)
-
+            case .failure(let error):
+                guard let error = error as? ServiceError else { return }
+                switch error {
+                case .serverError(let string),
+                        .unkown(let string),
+                        .decodingError(let string):
+                    self?.error = string
+                    print(string)
+                }
+            }
+        }
     }
-
-
-
+    
+}
 }
