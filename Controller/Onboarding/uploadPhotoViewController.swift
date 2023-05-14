@@ -5,6 +5,9 @@ import Combine
 
 class uploadPhotoViewController: UIViewController{
     
+    private let viewModel = AuthenticationViewViewModel()
+    private var subscriptions: Set<AnyCancellable> = []
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -120,15 +123,13 @@ class uploadPhotoViewController: UIViewController{
 
         }
 
-
-
         }
 
 
         extension uploadPhotoViewController: PHPickerViewControllerDelegate {
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
             
-            picker.dismiss(animated: true) //to seelect the image and dismiss the gallery picked from
+            picker.dismiss(animated: true) //to eelect the image and dismiss the gallery picked from
             
             for result in results { //although we specified the results to be one image but it returns an array so we iterate throw it
                 result.itemProvider.loadObject(ofClass: UIImage.self) { [weak self] object, error in
@@ -141,11 +142,10 @@ class uploadPhotoViewController: UIViewController{
 
                             }
                             self?.detect(image: ciimage)
+                            self?.viewModel.idImage = image
                             guard let vc = self?.navigationController?.viewControllers.first as? logInViewController else {return}
                             vc.dismiss(animated: true)
-                            
-//                            ProfileDataFormViewViewModel.viewModel.imageData = image
-        //                        ProfileDataFormViewViewModel.viewModel.validateUserProfileForm()  //we check if the form is valid evry time anything in it is changed so we can enable the button
+                        
                         }
                     }
                 }
