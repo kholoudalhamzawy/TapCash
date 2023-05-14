@@ -379,12 +379,11 @@ class SignUpViewController: UIViewController, UITextFieldDelegate {
         loginLbl.isUserInteractionEnabled = true
         loginLbl.addGestureRecognizer(tap)
         
-        
-                nameTextFeild.text = "kholoud"
-                mailTextFeild.text = "kh@kh.com"
-                passwordTextFeild.text = "Kh123456"
-        passwordConfermationTextFeild.text = "Kh123456"
-                phoneTextFeild.text = "12345678900"
+                nameTextFeild.text = "khowwoud alham"
+                mailTextFeild.text = "kww@gmail.com"
+                passwordTextFeild.text = "kS@123456"
+        passwordConfermationTextFeild.text = "kS@123456"
+                phoneTextFeild.text = "01325378900"
         
         
     }
@@ -408,10 +407,8 @@ class SignUpViewController: UIViewController, UITextFieldDelegate {
         viewModel.$user.sink{ [weak self] user in //when we get a user from the view model
             guard user != nil else {return}
             
-          //  self?.viewModel.updateUserData()
+//            self?.viewModel.updateUserData()
             self?.navigationController?.pushViewController(uploadPhotoViewController(), animated: true)
-
-            
         }
         .store(in: &subscriptions)
         
