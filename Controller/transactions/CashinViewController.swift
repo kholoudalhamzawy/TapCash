@@ -6,9 +6,12 @@
 //
 
 import UIKit
+import Combine
 
 class CashinViewController: UIViewController {
     
+    private var subscriptions: Set<AnyCancellable> = []
+
     private let cashInTableView: UITableView = {
         let tableView = UITableView()
         tableView.showsVerticalScrollIndicator = false
@@ -37,6 +40,14 @@ class CashinViewController: UIViewController {
 //        configureWalletHeaderView()
         
     }
+    private func bindViews(){
+        AuthenticationViewViewModel.auth.$balance.sink{ [weak self] balance in
+                guard let balance = balance else {return}
+            self?.headerView?.configure(balance: balance)
+        }
+        .store(in: &self.subscriptions)
+
+    }
 
     
     private func configureWalletHeaderView() {
@@ -57,6 +68,7 @@ class CashinViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        bindViews()
         
     }
         
