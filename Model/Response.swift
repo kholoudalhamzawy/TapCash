@@ -8,6 +8,22 @@
 import Foundation
 
 
+// MARK: - ServiceError
+
+enum ServiceError: Error {
+    case serverError(String)
+    case unkown(String = "An unknown error occured.")
+    case decodingError(String = "Error parsing server response.")
+    case invalidToken(String = "Token Expired")
+}
+
+// MARK: - TokenInvalidMessage
+struct TokenInvalidMessage: Codable {
+    let status: Int
+    let message: String
+}
+
+
 // MARK: - TransferResponse
 struct TransferResponse: Codable {
     let status: Int
