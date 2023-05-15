@@ -6,9 +6,11 @@
 //
 
 import UIKit
+import Combine
 
 class DonationsViewController: UIViewController {
 
+    private var subscriptions: Set<AnyCancellable> = []
     
     private let TotalBalanceLbl: UILabel = {
         var view = UILabel()
@@ -22,7 +24,7 @@ class DonationsViewController: UIViewController {
     private let balanceDisplayLbl: UILabel = {
         var view = UILabel()
         view.font = UIFont(name: "Poppins-Medium", size: 32)
-        view.text = "70,1050 EGP"
+//        view.text = "70,1050 EGP"
         view.textAlignment = .center
         view.textColor = #colorLiteral(red: 0.9411764706, green: 0.9019607843, blue: 0.9607843137, alpha: 1)
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -157,12 +159,21 @@ class DonationsViewController: UIViewController {
         view.addSubview(transactionVStack)
         configureTransactionVStack()
         
-//        applyConstraints()
     }
 
+    private func bindViews(){
+        AuthenticationViewViewModel.auth.$balance.sink{ [weak self] balance in
+                guard let balance = balance else {return}
+            self?.balanceDisplayLbl.text = balance
+        }
+        .store(in: &self.subscriptions)
+
+    }
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         applyConstraints()
+        bindViews()
     }
     private func applyConstraints(){
         let walletImageViewBtnConstraints = [
