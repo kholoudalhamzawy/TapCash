@@ -6,8 +6,12 @@
 //
 
 import UIKit
+import Combine
 
 class TransferViewController: UIViewController {
+    
+    private var subscriptions: Set<AnyCancellable> = []
+
     
     private let TotalBalanceLbl: UILabel = {
         var view = UILabel()
@@ -21,7 +25,7 @@ class TransferViewController: UIViewController {
     private let balanceDisplayLbl: UILabel = {
         var view = UILabel()
         view.font = UIFont(name: "Poppins-Medium", size: 32)
-        view.text = "70,1050 EGP"
+//        view.text = "70,1050 EGP"
         view.textAlignment = .center
         view.textColor = #colorLiteral(red: 0.9411764706, green: 0.9019607843, blue: 0.9607843137, alpha: 1)
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -170,8 +174,16 @@ class TransferViewController: UIViewController {
                 
     }
     
-    
+    private func bindViews(){
 
+        AuthenticationViewViewModel.auth.$balance.sink{ [weak self] balance in
+            guard let balance = balance else {return}
+            self?.balanceDisplayLbl.text = balance
+
+        }
+        .store(in: &self.subscriptions)
+
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -181,10 +193,11 @@ class TransferViewController: UIViewController {
         configurewalletStack()
         view.addSubview(transactionVStack)
         configureTransactionVStack()
+        bindViews()
         
-//        applyConstraints()
     }
 
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         applyConstraints()
