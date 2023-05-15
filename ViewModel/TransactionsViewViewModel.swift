@@ -6,8 +6,6 @@
 //
 
 import Foundation
-
-import Foundation
 import Combine
 
 final class TransactionsViewViewModel: ObservableObject{
@@ -19,7 +17,6 @@ final class TransactionsViewViewModel: ObservableObject{
     @Published var iscashoutFormValid: Bool = false
     @Published var error: String?
     
-    private var viewModel = TransactionsViewViewModel()
     private var subscriptions: Set<AnyCancellable> = []
     
     func invalidPhoneMessage(_ text: String) -> String{
@@ -36,12 +33,20 @@ final class TransactionsViewViewModel: ObservableObject{
     }
     
     func invalidamountMessage(_ text: String) -> String {
-        if text.isEmpty {
+        let set = CharacterSet(charactersIn: text)
+        if !CharacterSet.decimalDigits.isSuperset(of: set) {
+            return "* amount must only be in digits *"
+        } else if text.isEmpty {
             return "* this Field is required *"
         } else if text.count < 2 {
             return "* number must be atleast 10 EGP *"
+        } else if let num = Int(text){
+            if num > Int(AuthenticationViewViewModel.auth.balance!)! {
+                return "* you don't have enough balance *"
+            }
         }
         return ""
+        
 
     }
     
@@ -52,11 +57,12 @@ final class TransactionsViewViewModel: ObservableObject{
             return
         }
         
-
         phoneNumberError = invalidPhoneMessage(phone)
         amountError = invalidamountMessage(amount)
+        
         iscashoutFormValid = phoneNumberError!.isEmpty &&
                                   amountError!.isEmpty
+
 
     }
     
@@ -71,7 +77,7 @@ final class TransactionsViewViewModel: ObservableObject{
                 case .success(let response):
                     AuthenticationViewViewModel.auth.balance = response.data.blanceAfter
                     let balance = Data( response.data.blanceAfter.utf8)
-                    KeychainHelper.standard.save(balance, service: Constants.service, account: Constants.account)
+                    KeychainHelper.standard.save(balance, service: "balance", account: Constants.account)
                     
                 case .failure(let error):
                     guard let error = error as? ServiceError else { return }
@@ -81,6 +87,10 @@ final class TransactionsViewViewModel: ObservableObject{
                             .decodingError(let string):
                         print(string)
                         self?.error = string
+                    case .invalidToken(let string):
+                        AuthenticationViewViewModel.auth.logoutUser()
+                        self?.error = string
+                        print(string)
                     }
                 }
             }
