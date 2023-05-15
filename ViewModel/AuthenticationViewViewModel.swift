@@ -5,7 +5,6 @@
 //  Created by KH on 01/05/2023.
 //
 
-import Foundation
 import Combine
 import UIKit
 
@@ -161,7 +160,7 @@ final class AuthenticationViewViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                    self?.user = response.user
+                    AuthenticationViewViewModel.auth.user = response.user
                     AuthenticationViewViewModel.auth.token = response.authorisation.token
                     let token = Data( response.authorisation.token.utf8)
                     KeychainHelper.standard.save(token, service: Constants.service, account: Constants.account)
@@ -174,6 +173,10 @@ final class AuthenticationViewViewModel: ObservableObject {
                             .decodingError(let string):
                         print(string)
                         self?.error = string
+                    case .invalidToken(let string):
+                        AuthenticationViewViewModel.auth.logoutUser()
+                        self?.error = string
+                        print(string)
                     }
                 }
             }
@@ -194,10 +197,13 @@ final class AuthenticationViewViewModel: ObservableObject {
 //                guard let self = self else { return }
             switch result {
             case .success(let response):
-                self?.user = response.user
                 AuthenticationViewViewModel.auth.token = response.authorisation.token
                 let token = Data( response.authorisation.token.utf8)
                 KeychainHelper.standard.save(token, service: Constants.service, account: Constants.account)
+                AuthenticationViewViewModel.auth.user = response.user
+                AuthenticationViewViewModel.auth.name = response.user.name
+                let user = Data(response.user.name.utf8)
+                KeychainHelper.standard.save(user, service: "user", account: Constants.account)
                 print(response)
 
             case .failure(let error):
@@ -211,6 +217,10 @@ final class AuthenticationViewViewModel: ObservableObject {
                     self?.error = string
                     print(string)
 //                        AlertManager.showSignInErrorAlert(on: self, with: string)
+                case .invalidToken(let string):
+                    AuthenticationViewViewModel.auth.logoutUser()
+                    self?.error = string
+                    print(string)
                 }
             }
         }
@@ -223,9 +233,14 @@ final class AuthenticationViewViewModel: ObservableObject {
             
             switch result {
             case .success(let response):
-                self?.user = nil
-                AuthenticationViewViewModel.auth.token = nil
                 KeychainHelper.standard.delete(service: Constants.service, account: Constants.account)
+                KeychainHelper.standard.delete(service: "balance", account: Constants.account)
+                KeychainHelper.standard.delete(service: "user", account: Constants.account)
+                AuthenticationViewViewModel.auth.token = nil
+                AuthenticationViewViewModel.auth.balance = nil
+                AuthenticationViewViewModel.auth.user = nil
+                AuthenticationViewViewModel.auth.name = nil
+
                 print(response)
 
             case .failure(let error):
@@ -235,6 +250,17 @@ final class AuthenticationViewViewModel: ObservableObject {
                         .unkown(let string),
                         .decodingError(let string):
                     self?.error = string
+                    
+                case .invalidToken(let string):
+                    KeychainHelper.standard.delete(service: Constants.service, account: Constants.account)
+                    KeychainHelper.standard.delete(service: "balance", account: Constants.account)
+                    KeychainHelper.standard.delete(service: "user", account: Constants.account)
+                    AuthenticationViewViewModel.auth.token = nil
+                    AuthenticationViewViewModel.auth.balance = nil
+                    AuthenticationViewViewModel.auth.user = nil
+                    AuthenticationViewViewModel.auth.name = nil
+
+
                     print(string)
                 }
             }
@@ -243,3 +269,5 @@ final class AuthenticationViewViewModel: ObservableObject {
     
 }
 }
+    
+
