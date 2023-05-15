@@ -44,7 +44,12 @@ class DataManager {
                 let results = try JSONDecoder().decode(BalanceResponse.self, from: data)
                 completion(.success(results))
             } catch {
-                completion(.failure(ServiceError.decodingError("decoding error " + str)))
+                do{
+                    let tokenError = try JSONDecoder().decode(TokenInvalidMessage.self, from: data)
+                    completion(.failure(ServiceError.invalidToken()))
+                } catch {
+                    completion(.failure(ServiceError.decodingError("decoding error " + str)))
+                    }
             }
         }
 
