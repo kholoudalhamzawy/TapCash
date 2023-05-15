@@ -24,7 +24,7 @@ final class HomeViewViewModel: ObservableObject{
                 case .success(let response):
                     AuthenticationViewViewModel.auth.balance = response.data.balance
                     let balance = Data( response.data.balance.utf8)
-                    KeychainHelper.standard.save(balance, service: Constants.service, account: Constants.account)
+                    KeychainHelper.standard.save(balance, service: "balance", account: Constants.account)
                     
                 case .failure(let error):
                     guard let error = error as? ServiceError else { return }
@@ -34,11 +34,15 @@ final class HomeViewViewModel: ObservableObject{
                             .decodingError(let string):
                         print(string)
                         self?.error = string
+                    case .invalidToken(let string):
+                        AuthenticationViewViewModel.auth.logoutUser()
+                        self?.error = string
+                        print(string)
+
                     }
                 }
             }
         }
     }
-    
     
 }
