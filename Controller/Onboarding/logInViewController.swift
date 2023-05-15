@@ -342,12 +342,14 @@ class logInViewController: UIViewController {
     private func bindViews(){
        
         viewModel.$isAuthenticationFormValid.sink{ [weak self] validationState in
-              self?.viewModel.logInUser()
+            if validationState {
+                self?.viewModel.logInUser()
+            }
             
         }
         .store(in: &subscriptions)
         
-        viewModel.$user.sink{ [weak self] user in //when we get a user from the view model
+        AuthenticationViewViewModel.auth.$user.sink{ [weak self] user in //when we get a user from the view model
             guard user != nil else {return}
             guard let vc = self?.navigationController?.viewControllers.first as? logInViewController else {return}
             vc.dismiss(animated: true)
