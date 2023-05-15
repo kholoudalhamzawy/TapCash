@@ -6,8 +6,12 @@
 //
 
 import UIKit
+import Combine
 
 class CardsViewController: UIViewController {
+    
+    private var subscriptions: Set<AnyCancellable> = []
+
 
     private let cardImageView: UIImageView = {
         let imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: 400, height: 205))
@@ -33,7 +37,7 @@ class CardsViewController: UIViewController {
         var view = UILabel()
         view.textAlignment = .center
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.attributedText = NSMutableAttributedString(string: "MAHMOUD ELSALAKH", attributes: [NSAttributedString.Key.kern: 1.2])
+        
         view.textColor = UIColor(red: 1, green: 1, blue: 1, alpha: 1)
         view.font = UIFont(name: "Poppins-Medium", size: 12)
         view.frame = CGRect(x: 0, y: 0, width: 205, height: 17)
@@ -80,7 +84,7 @@ class CardsViewController: UIViewController {
         view.frame = CGRect(x: 0, y: 0, width: 162, height: 11)
         view.textColor = UIColor(red: 0.4, green: 0, blue: 0.6, alpha: 1)
         view.font = UIFont(name: "Poppins-Regular", size: 16)
-        view.text = "MAHMOUD ELSALAKH"
+      //  view.text = "MAHMOUD ELSALAKH"
 
         return view
     }()
@@ -165,7 +169,22 @@ class CardsViewController: UIViewController {
 
          applyConstarints()
      }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        bindViews()
+        
+    }
+    
+    private func bindViews(){
 
+        AuthenticationViewViewModel.auth.$name.sink{ [weak self] user in
+            guard let user = user else {return}
+            self?.nameCardLbl.attributedText = NSMutableAttributedString(string: user, attributes: [NSAttributedString.Key.kern: 1.2])
+            self?.nameLbl.text = user
+        }
+        .store(in: &self.subscriptions)
+    }
     
      private func applyConstarints(){
          
