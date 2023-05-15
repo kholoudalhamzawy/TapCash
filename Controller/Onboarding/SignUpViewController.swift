@@ -376,14 +376,15 @@ class SignUpViewController: UIViewController, UITextFieldDelegate {
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapToDismiss)))
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(DidTapLogin))
+        
         loginLbl.isUserInteractionEnabled = true
         loginLbl.addGestureRecognizer(tap)
         
-                nameTextFeild.text = "khowwoud alham"
-                mailTextFeild.text = "kww@gmail.com"
+                nameTextFeild.text = "khowoud alham"
+                mailTextFeild.text = "kw@gmail.com"
                 passwordTextFeild.text = "kS@123456"
         passwordConfermationTextFeild.text = "kS@123456"
-                phoneTextFeild.text = "01325378900"
+                phoneTextFeild.text = "01325078900"
         
         
     }
@@ -398,13 +399,15 @@ class SignUpViewController: UIViewController, UITextFieldDelegate {
 
     }
     private func bindViews(){
-        
+ 
         viewModel.$isAuthenticationFormValid.sink{ [weak self] validationState in
-            self?.viewModel.createUser()
+            if validationState {
+                self?.viewModel.createUser()
+            }
         }
         .store(in: &subscriptions)
         
-        viewModel.$user.sink{ [weak self] user in //when we get a user from the view model
+        AuthenticationViewViewModel.auth.$user.sink{ [weak self] user in //when we get a user from the view model
             guard user != nil else {return}
             
 //            self?.viewModel.updateUserData()
