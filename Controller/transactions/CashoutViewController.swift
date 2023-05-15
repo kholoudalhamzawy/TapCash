@@ -6,10 +6,13 @@
 //
 
 import UIKit
-
+import Combine
 
 class CashoutViewController: UIViewController {
     
+    
+    private var viewModel = TransactionsViewViewModel()
+    private var subscriptions: Set<AnyCancellable> = []
     
     private let cashOutTableView: UITableView = {
         let tableView = UITableView()
@@ -20,7 +23,6 @@ class CashoutViewController: UIViewController {
     
     private var headerView: CashOutUIView?
     
-
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -59,14 +61,16 @@ class CashoutViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        headerView?.delegate = self
+        bindViews()
+
     }
         
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         cashOutTableView.frame = view.frame
+        
     }
-    
     func configureNavigationBar(){
       
         var image = UIImage(named: "ic-logo")
@@ -80,8 +84,51 @@ class CashoutViewController: UIViewController {
         navigationItem.titleView = CashOut
                 
     }
-   
     
+    private func bindViews(){
+
+        AuthenticationViewViewModel.auth.$balance.sink{ [weak self] balance in
+            guard let balance = balance else {return}
+            self?.headerView?.configureBalance(balance: balance)
+
+        }
+        .store(in: &self.subscriptions)
+
+            viewModel.$iscashoutFormValid.sink{ [weak self] validationState in
+                if validationState {
+                    self?.viewModel.cashout()
+                }
+
+        }
+        .store(in: &self.subscriptions)
+
+        viewModel.$error.sink{ [weak self] errorString in
+            guard let error = errorString else { return } //guard let cause $error is an optional
+            self?.presentAlert(with: error)
+            print(error)
+
+        }
+        .store(in: &subscriptions)
+
+            self.viewModel.$phoneNumberError.sink{  [weak self] errorString in
+            guard let error = errorString else { return }
+            self?.headerView?.configurePhoneError(error: error)
+        }.store(in: &self.subscriptions)
+
+            self.viewModel.$amountError.sink{  [weak self] errorString in
+            guard let error = errorString else { return }
+            self?.headerView?.configureAmountError(error: error)
+        }.store(in: &self.subscriptions)
+        }
+    
+
+        private func presentAlert(with error: String) {
+            let alert = UIAlertController(title: "Error", message: error, preferredStyle: .alert)
+            let okayButton = UIAlertAction(title: "ok", style: .default)
+            alert.addAction(okayButton)
+            present(alert, animated: true)
+        }
+
 }
 
 
@@ -117,4 +164,16 @@ extension CashoutViewController: UITableViewDelegate, UITableViewDataSource{
     
     
 
+}
+
+extension CashoutViewController: CashOutUIViewDelegate{
+    
+    func didTabSend() {
+        viewModel.phoneNumber = headerView?.getPhone()
+        viewModel.amount = headerView?.getAmount()
+        viewModel.validateCashoutForm()
+    }
+    
+    
+    
 }
