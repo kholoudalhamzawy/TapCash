@@ -19,8 +19,3 @@ struct Constants {
 }
 
 
-enum ServiceError: Error {
-    case serverError(String)
-    case unkown(String = "An unknown error occured.")
-    case decodingError(String = "Error parsing server response.")
-}
