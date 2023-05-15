@@ -7,8 +7,13 @@
 
 import UIKit
 
-class CashOutUIView: UIView {
+protocol CashOutUIViewDelegate: AnyObject {
+    func didTabSend()
+}
 
+class CashOutUIView: UIView {
+    
+    weak var delegate: CashOutUIViewDelegate?
     
     private let phoneTextFeild : UITextField = {
         let txtField = UITextField()
@@ -22,6 +27,7 @@ class CashOutUIView: UIView {
         txtField.layer.borderWidth = 0.5
         txtField.layer.borderColor = #colorLiteral(red: 0.5882352941, green: 0.6039215686, blue: 0.6274509804, alpha: 1)
         txtField.setLeftPaddingPoints(10)
+        txtField.text = "01010222222"
         return txtField
     }()
 
@@ -39,6 +45,7 @@ class CashOutUIView: UIView {
         txtField.layer.borderWidth = 0.5
         txtField.layer.borderColor = #colorLiteral(red: 0.5882352941, green: 0.6039215686, blue: 0.6274509804, alpha: 1)
         txtField.setLeftPaddingPoints(10)
+        txtField.text = "30"
         
         return txtField
     }()
@@ -56,9 +63,8 @@ class CashOutUIView: UIView {
         return btn
     }()
     
-
-    
     @objc func didTapSend(){
+        delegate?.didTabSend()
         
     }
     private let phoneValidationLbl: UILabel = {
@@ -85,8 +91,23 @@ class CashOutUIView: UIView {
     
     private var headerView = walletUIView()
     
-    public func configure(balance: String, to mabile: String, EGP amount: String) {
+     func configureBalance(balance: String ){
         headerView.configure(balance: balance)
+    }
+    
+     func configurePhoneError(error: String){
+        phoneValidationLbl.text = error
+
+    }
+     func configureAmountError(error: String){
+        amountValidationLbl.text = error
+    }
+   
+    func getPhone() -> String? {
+        return phoneTextFeild.text
+    }
+    func getAmount() -> String? {
+        return amountTextFeild.text
     }
     
     override init(frame: CGRect) {
@@ -109,6 +130,8 @@ class CashOutUIView: UIView {
     required init?(coder: NSCoder) {
         fatalError()
     }
+    
+    
     private func applyConstraints(){
         let headerViewConstraints = [
             headerView.topAnchor.constraint(equalTo: self.topAnchor),
