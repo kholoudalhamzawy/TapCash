@@ -407,8 +407,24 @@ class HomeViewController: UIViewController {
     private func handleAuthentication(){
         if let data = KeychainHelper
             .standard.read( service: Constants.service, account: Constants.account){
+            
             let token = String(data: data, encoding: .utf8)!
             AuthenticationViewViewModel.auth.token = token
+            
+            if let balanceData = KeychainHelper
+                .standard.read( service: "balance", account: Constants.account){
+                let balance = String(data: balanceData, encoding: .utf8)!
+                AuthenticationViewViewModel.auth.balance = balance
+            } else { //if the user hasnt logged in before and there is no already stored balance
+                self.viewModel.getBalance()
+            }
+            
+            if let user = KeychainHelper
+                .standard.read( service: "user", account: Constants.account){
+                let username = String(data: user, encoding: .utf8)!
+                AuthenticationViewViewModel.auth.name = username
+            }
+
         }
         AuthenticationViewViewModel.auth.$token.sink{ [weak self] token in
             if token == nil {
@@ -418,9 +434,10 @@ class HomeViewController: UIViewController {
                 DispatchQueue.main.async {
 //                    self?.timelineTableView.reloadData()
                 }
-            } else {
-                self?.viewModel.getBalance()
             }
+//            else {
+//                self?.viewModel.getBalance()
+//            }
         }.store(in: &subscriptions)
     }
     
